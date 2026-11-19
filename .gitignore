@@ -1,0 +1,25 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local configuration and generated files
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+build/
+release/
+dist/
+input/
+output/
+*.egg-info/
+
+# 開發用檔案只留在本機，不上傳（「開發」資料夾有自己的本機版本紀錄）
+開發/
+# AI 工具指令檔必須放在根目錄才會被自動讀取，但不上傳
+AGENTS.md
+CLAUDE.md

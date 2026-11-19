@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>預算流用工具使用說明</title>
+<style>
+  /* 暖色系、低刺激配色；所有文字與背景的對比度皆在 4.5:1 以上 */
+  :root {
+    --bg:      #F3EADC;   /* 頁面底色：暖米色 */
+    --card:    #FBF5EA;   /* 卡片：奶油色（非純白） */
+    --card-2:  #EEE2CF;   /* 次要底色 */
+    --line:    #D6C6AE;
+    --ink:     #2B2119;   /* 標題 */
+    --text:    #3D3127;   /* 內文 */
+    --muted:   #66543F;   /* 輔助文字 */
+    --accent:  #9C4224;   /* 磚紅強調 */
+    --ok:      #4F6633;   /* 成功：橄欖綠 */
+    --warn:    #8A5A0B;   /* 警告：琥珀褐 */
+    --bad:     #9A2C20;   /* 失敗：深紅 */
+    --sans: "Microsoft JhengHei", "微軟正黑體", "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+    --mono: Consolas, "Microsoft JhengHei", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 18px;
+    line-height: 1.8;
+    padding: 48px 20px 120px;
+  }
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 48px;
+  }
+  @media (max-width: 920px) { .page { grid-template-columns: 1fr; } nav { display: none; } }
+
+  /* ── 側邊目錄 ── */
+  nav { position: sticky; top: 28px; align-self: start; font-size: 16px; }
+  nav .label { font-size: 15px; font-weight: 700; color: var(--muted); margin-bottom: 10px; }
+  nav a {
+    display: block;
+    padding: 6px 0 6px 14px;
+    border-left: 3px solid var(--line);
+    color: var(--text);
+    text-decoration: none;
+  }
+  nav a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── 標題區 ── */
+  .eyebrow { font-size: 15px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.05em; }
+  h1 { font-size: 34px; font-weight: 700; color: var(--ink); margin-bottom: 18px; line-height: 1.4; }
+  h2 {
+    font-size: 25px; font-weight: 700; color: var(--ink);
+    margin: 48px 0 14px; scroll-margin-top: 24px;
+    padding-bottom: 6px; border-bottom: 2px solid var(--line);
+  }
+  h3 { font-size: 20px; font-weight: 700; color: var(--ink); margin: 22px 0 8px; }
+  p { margin-bottom: 12px; max-width: 760px; }
+  ul, ol { padding-left: 28px; max-width: 760px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+  b, strong { color: var(--ink); }
+  code {
+    font-family: var(--mono); font-size: 16px;
+    background: var(--card-2); color: var(--ink);
+    padding: 1px 6px; border-radius: 5px;
+  }
+  .file { font-weight: 700; color: var(--accent); }
+
+  .tldr {
+    border: 1.5px solid var(--line);
+    border-left: 5px solid var(--accent);
+    border-radius: 10px;
+    background: var(--card);
+    padding: 18px 22px;
+  }
+
+  /* ── 步驟卡片 ── */
+  .steps { list-style: none; padding: 0; counter-reset: step; }
+  .steps > li {
+    counter-increment: step;
+    position: relative;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px 14px 70px;
+    margin-bottom: 12px;
+    max-width: 800px;
+  }
+  .steps > li::before {
+    content: counter(step);
+    position: absolute; left: 20px; top: 16px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); color: #FFF8EE;
+    font-weight: 700; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps > li > b:first-child { display: block; font-size: 19px; margin-bottom: 2px; }
+  .steps ul { margin: 6px 0 0; }
+
+  /* ── 表格 ── */
+  table {
+    border-collapse: collapse; width: 100%; max-width: 800px;
+    background: var(--card); border: 1.5px solid var(--line);
+    border-radius: 10px; overflow: hidden; margin: 10px 0 14px; font-size: 17px;
+  }
+  th, td { padding: 9px 14px; border-bottom: 1px solid var(--line); text-align: left; }
+  th { background: var(--card-2); color: var(--ink); font-weight: 700; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  .neg { color: var(--bad); }
+  .pos { color: var(--ok); }
+  .scroll { overflow-x: auto; }
+
+  /* ── 分頁示意（仿 Excel 工作表） ── */
+  .sheets {
+    border: 1.5px solid var(--line); border-radius: 10px;
+    background: var(--card); overflow: hidden; max-width: 800px; margin: 12px 0;
+  }
+  .sheets .pane { display: none; padding: 4px 4px 0; }
+  .sheets .pane.on { display: block; }
+  .sheets table { border: none; margin: 0; border-radius: 0; }
+  .tabbar { display: flex; flex-wrap: wrap; background: var(--card-2); border-top: 1px solid var(--line); }
+  .tabbar button {
+    appearance: none; border: none; background: none; cursor: pointer;
+    font-family: var(--mono); font-size: 16px; color: var(--muted);
+    padding: 9px 18px; border-right: 1px solid var(--line);
+  }
+  .tabbar button.on {
+    background: var(--card); color: var(--ink); font-weight: 700;
+    border-top: 3px solid var(--accent); margin-top: -1px;
+  }
+  .tabbar button:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .caption { font-size: 16px; color: var(--muted); }
+
+  /* ── 執行視窗示意 ── */
+  pre.console {
+    background: #2E2620; color: #F3E9D8;
+    font-family: var(--mono); font-size: 16px; line-height: 1.65;
+    padding: 18px 20px; border-radius: 10px; overflow-x: auto;
+    max-width: 800px; margin: 10px 0 14px;
+  }
+  pre.console .ok { color: #B9D58C; }
+  pre.console .warn { color: #F2C46D; }
+  pre.console .bad { color: #F4A08C; }
+  pre.console .dim { color: #CBBBA3; }
+
+  /* ── 提示框 ── */
+  .callout {
+    display: flex; gap: 12px; max-width: 800px;
+    border: 1.5px solid var(--line); background: var(--card-2);
+    border-radius: 10px; padding: 14px 18px; margin: 16px 0;
+  }
+  .callout .ico { color: var(--accent); font-weight: 700; flex: none; }
+  .callout.warn { border-color: #D9B77A; background: #F6E6C6; }
+  .callout.warn .ico { color: var(--warn); }
+
+  /* ── 常見問題 ── */
+  details {
+    border: 1.5px solid var(--line); border-radius: 10px;
+    background: var(--card); margin: 10px 0; max-width: 800px; overflow: hidden;
+  }
+  summary {
+    list-style: none; cursor: pointer; padding: 13px 18px;
+    font-size: 18px; font-weight: 700; color: var(--ink);
+    display: flex; gap: 10px; align-items: baseline;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸"; color: var(--accent); transition: transform 120ms; }
+  details[open] summary::before { transform: rotate(90deg); }
+  summary:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  details .body { padding: 0 18px 14px 40px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav aria-label="本頁目錄">
+    <div class="label">本頁目錄</div>
+    <a href="#summary">一分鐘看懂</a>
+    <a href="#first">第一次使用</a>
+    <a href="#daily">每次使用</a>
+    <a href="#trial">先試用看看</a>
+    <a href="#input">預算表格式</a>
+    <a href="#result">計算結果</a>
+    <a href="#window">視窗訊息</a>
+    <a href="#files">處理後的檔案</a>
+    <a href="#faq">常見問題</a>
+  </nav>
+
+  <main>
+    <header>
+      <div class="eyebrow">操作說明</div>
+      <h1>預算科目流用最佳解工具</h1>
+      <div class="tldr" id="summary">
+        <b>一分鐘看懂：</b>把預算表放進 <code>input</code> 資料夾 → 雙擊
+        <span class="file">啟動流用計算.bat</span> → 到 <code>output</code> 資料夾打開結果 Excel。
+        工具會算出每個科目要流用多少錢到哪個科目，並盡量讓轉移筆數最少。
+        結果第 1 頁是原始資料、第 2 頁是總覽，第 3 頁起每個流用組別各一頁。
+      </div>
+    </header>
+
+    <h2 id="first">第一次使用</h2>
+    <ol class="steps">
+      <li>
+        <b>下載並解壓縮</b>
+        在專案網頁按「Code」→「Download ZIP」，下載後解壓縮到桌面或任何資料夾。
+        <ul>
+          <li>解壓縮前，可以在 ZIP 檔按右鍵 →「內容」→ 勾選「解除封鎖」→「確定」，能減少 Windows 的安全性警告。</li>
+        </ul>
+      </li>
+      <li>
+        <b>雙擊「啟動流用計算.bat」</b>
+        <ul>
+          <li>若出現「Windows 已保護您的電腦」，按「其他資訊」→「仍要執行」。</li>
+          <li>若電腦沒有 Python，視窗會詢問是否自動安裝，按 <code>Y</code> 即可（需要網路，約數分鐘）。安裝後如果提示重新開啟，請關閉視窗再雙擊一次。</li>
+          <li>接著會自動準備執行環境（只有第一次，約 1～3 分鐘，需要網路）。</li>
+        </ul>
+      </li>
+      <li>
+        <b>完成</b>
+        資料夾裡會自動出現 <code>input</code> 與 <code>output</code> 兩個資料夾，之後照「每次使用」操作即可。
+      </li>
+    </ol>
+
+    <h2 id="daily">每次使用</h2>
+    <ol class="steps">
+      <li><b>放入預算表</b>把 <code>.xlsx</code>、<code>.xls</code> 或 <code>.csv</code> 檔放進 <code>input</code> 資料夾，一次可以放好幾個。</li>
+      <li><b>雙擊「啟動流用計算.bat」</b>等視窗顯示「完成」。每個流用組別最多計算約 30 秒。</li>
+      <li><b>打開結果</b>到 <code>output</code> 資料夾開啟 <code>原檔名_流用結果_日期時間.xlsx</code>。</li>
+    </ol>
+
+    <h2 id="trial">先試用看看</h2>
+    <p><code>測試資料</code> 資料夾有四份假資料。把它們<b>複製</b>（不是移動）到 <code>input</code> 資料夾，再雙擊 <span class="file">啟動流用計算.bat</span>，就能看到成功與失敗時的畫面：</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>檔案</th><th>會看到的結果</th></tr></thead>
+        <tbody>
+          <tr><td><code>1_正常資料_單一組別.csv</code></td><td><span class="pos">成功</span>，結果 Excel 有 3 頁：原始資料、排列後總覽、1 個組別</td></tr>
+          <tr><td><code>2_正常資料_多組別分頁.csv</code></td><td><span class="pos">成功</span>，結果 Excel 有 5 頁：原始資料、排列後總覽、3 個組別各一頁</td></tr>
+          <tr><td><code>3_錯誤資料_欄位內容.csv</code></td><td><span class="neg">失敗</span>，視窗一次列出所有錯誤與列號</td></tr>
+          <tr><td><code>4_錯誤資料_組別合計不為0.csv</code></td><td><span class="neg">失敗</span>，視窗指出哪一組的差異合計不為 0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="input">預算表格式</h2>
+    <div class="callout">
+      <span class="ico">★</span>
+      <div><b>建議直接用範本：</b><code>範本</code> 資料夾有兩種空白預算表，挑一種填寫即可。
+        <ul style="margin:6px 0 0;">
+          <li><code>流用預算表_範本.xlsx</code>：「差異」欄已放好公式，只要填前四欄；第二個工作表是填寫說明。填好後用 Excel 存檔。</li>
+          <li><code>流用預算表_範本.csv</code>：五個欄位都要自己填，差異請自行計算。</li>
+        </ul>
+        <code>.xlsx</code>、<code>.xls</code>、<code>.csv</code> 三種格式都可以計算。</div>
+    </div>
+    <p>第一列是欄位名稱，必須有下面五欄（順序不拘，可以有其他欄位）。Excel 檔只讀<b>第一個工作表</b>。</p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>預算編號</th><th>預算名稱</th><th class="num">原預算金額</th><th class="num">流入後金額</th><th class="num">差異</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>AZ0-115F001-001</td><td>辦公用品</td><td class="num">50,000</td><td class="num">38,000</td><td class="num neg">−12,000</td></tr>
+          <tr><td>AZ0-115F001-004</td><td>國內旅費</td><td class="num">40,000</td><td class="num">52,000</td><td class="num pos">+12,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li><b>差異 ＝ 流入後金額 − 原預算金額。</b>負數是流出，正數是流入。</li>
+      <li>金額必須是整數元，可以有千分位逗號；原預算金額與流入後金額不可為負數。</li>
+      <li>預算編號格式為「單位-年度預算來源編碼-科目編號」，例如 <code>AZ0-115F001-008</code>，必須剛好有兩個「-」，且不可重複。</li>
+    </ul>
+    <div class="callout">
+      <span class="ico">★</span>
+      <div><b>哪些科目可以互相流用？</b>預算編號去掉最後一段科目編號後相同的科目，屬於同一個「流用組別」。
+        例如 <code>AZ0-115F001-001</code> 和 <code>AZ0-115F001-004</code> 同屬 <code>AZ0-115F001</code>，可以互相流用；
+        <code>AZ0-115G001-001</code> 屬於另一組，不會和它們配對。<b>每一組的差異合計都必須是 0。</b></div>
+    </div>
+
+    <h2 id="result">計算結果</h2>
+    <p>結果 Excel 的分頁依序是：</p>
+    <ol>
+      <li><b>原始資料</b>：你放進去的預算表內容（照原本順序），核對時不用再去找原檔。</li>
+      <li><b>排列後總覽</b>：所有組別的轉移明細放在同一頁，第一欄標明流用組別。</li>
+      <li><b>第 3 頁起，每個流用組別各一頁</b>：分頁名稱就是組別，只列出該組的轉移。</li>
+    </ol>
+    <p>每一筆轉移依流出預算編號排序。點下方分頁可以切換看看（以 <code>2_正常資料_多組別分頁.csv</code> 為例）：</p>
+    <div class="sheets" data-sheets>
+      <div class="pane on">
+        <div class="scroll"><table>
+          <thead><tr><th>預算編號</th><th>預算名稱</th><th class="num">原預算金額</th><th class="num">流入後金額</th><th class="num">差異</th></tr></thead>
+          <tbody>
+            <tr><td>AZ0-115F001-001</td><td>辦公用品</td><td class="num">80,000</td><td class="num">65,000</td><td class="num neg">-15,000</td></tr>
+            <tr><td>AZ0-115F001-002</td><td>郵電費</td><td class="num">45,000</td><td class="num">36,800</td><td class="num neg">-8,200</td></tr>
+            <tr><td>AZ0-115F001-003</td><td>國內旅費</td><td class="num">50,000</td><td class="num">61,300</td><td class="num pos">11,300</td></tr>
+            <tr><td>AZ0-115F001-004</td><td>印刷費</td><td class="num">30,000</td><td class="num">41,900</td><td class="num pos">11,900</td></tr>
+            <tr><td>AZ0-115G001-001</td><td>設備維護費</td><td class="num">120,000</td><td class="num">96,500</td><td class="num neg">-23,500</td></tr>
+            <tr><td>AZ0-115G001-002</td><td>委託調查費</td><td class="num">200,000</td><td class="num">188,000</td><td class="num neg">-12,000</td></tr>
+            <tr><td>AZ0-115G001-003</td><td>資訊服務費</td><td class="num">90,000</td><td class="num">105,000</td><td class="num pos">15,000</td></tr>
+            <tr><td>AZ0-115G001-004</td><td>一般事務費</td><td class="num">60,000</td><td class="num">73,600</td><td class="num pos">13,600</td></tr>
+            <tr><td>AZ0-115G001-005</td><td>臨時人員酬金</td><td class="num">70,000</td><td class="num">76,900</td><td class="num pos">6,900</td></tr>
+            <tr><td>AZ0-115F002-001</td><td>講座鐘點費</td><td class="num">40,000</td><td class="num">33,000</td><td class="num neg">-7,000</td></tr>
+            <tr><td>AZ0-115F002-002</td><td>場地使用費</td><td class="num">25,000</td><td class="num">32,000</td><td class="num pos">7,000</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="pane">
+        <div class="scroll"><table>
+          <thead><tr><th>流用組別</th><th>流出預算編號</th><th>流出預算名稱</th><th>流入預算編號</th><th>流入預算名稱</th><th class="num">金額</th></tr></thead>
+          <tbody>
+            <tr><td>AZ0-115F001</td><td>AZ0-115F001-001</td><td>辦公用品</td><td>AZ0-115F001-003</td><td>國內旅費</td><td class="num">11,300</td></tr>
+            <tr><td>AZ0-115F001</td><td>AZ0-115F001-001</td><td>辦公用品</td><td>AZ0-115F001-004</td><td>印刷費</td><td class="num">3,700</td></tr>
+            <tr><td>AZ0-115F001</td><td>AZ0-115F001-002</td><td>郵電費</td><td>AZ0-115F001-004</td><td>印刷費</td><td class="num">8,200</td></tr>
+            <tr><td>AZ0-115F002</td><td>AZ0-115F002-001</td><td>講座鐘點費</td><td>AZ0-115F002-002</td><td>場地使用費</td><td class="num">7,000</td></tr>
+            <tr><td>AZ0-115G001</td><td>AZ0-115G001-001</td><td>設備維護費</td><td>AZ0-115G001-003</td><td>資訊服務費</td><td class="num">3,000</td></tr>
+            <tr><td>AZ0-115G001</td><td>AZ0-115G001-001</td><td>設備維護費</td><td>AZ0-115G001-004</td><td>一般事務費</td><td class="num">13,600</td></tr>
+            <tr><td>AZ0-115G001</td><td>AZ0-115G001-001</td><td>設備維護費</td><td>AZ0-115G001-005</td><td>臨時人員酬金</td><td class="num">6,900</td></tr>
+            <tr><td>AZ0-115G001</td><td>AZ0-115G001-002</td><td>委託調查費</td><td>AZ0-115G001-003</td><td>資訊服務費</td><td class="num">12,000</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="pane">
+        <div class="scroll"><table>
+          <thead><tr><th>流出預算編號</th><th>流出預算名稱</th><th>流入預算編號</th><th>流入預算名稱</th><th class="num">金額</th></tr></thead>
+          <tbody>
+            <tr><td>AZ0-115F001-001</td><td>辦公用品</td><td>AZ0-115F001-003</td><td>國內旅費</td><td class="num">11,300</td></tr>
+            <tr><td>AZ0-115F001-001</td><td>辦公用品</td><td>AZ0-115F001-004</td><td>印刷費</td><td class="num">3,700</td></tr>
+            <tr><td>AZ0-115F001-002</td><td>郵電費</td><td>AZ0-115F001-004</td><td>印刷費</td><td class="num">8,200</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="pane">
+        <div class="scroll"><table>
+          <thead><tr><th>流出預算編號</th><th>流出預算名稱</th><th>流入預算編號</th><th>流入預算名稱</th><th class="num">金額</th></tr></thead>
+          <tbody>
+            <tr><td>AZ0-115F002-001</td><td>講座鐘點費</td><td>AZ0-115F002-002</td><td>場地使用費</td><td class="num">7,000</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="pane">
+        <div class="scroll"><table>
+          <thead><tr><th>流出預算編號</th><th>流出預算名稱</th><th>流入預算編號</th><th>流入預算名稱</th><th class="num">金額</th></tr></thead>
+          <tbody>
+            <tr><td>AZ0-115G001-001</td><td>設備維護費</td><td>AZ0-115G001-003</td><td>資訊服務費</td><td class="num">3,000</td></tr>
+            <tr><td>AZ0-115G001-001</td><td>設備維護費</td><td>AZ0-115G001-004</td><td>一般事務費</td><td class="num">13,600</td></tr>
+            <tr><td>AZ0-115G001-001</td><td>設備維護費</td><td>AZ0-115G001-005</td><td>臨時人員酬金</td><td class="num">6,900</td></tr>
+            <tr><td>AZ0-115G001-002</td><td>委託調查費</td><td>AZ0-115G001-003</td><td>資訊服務費</td><td class="num">12,000</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="tabbar" role="tablist" aria-label="結果分頁">
+        <button class="on" role="tab" aria-selected="true">原始資料</button>
+        <button role="tab" aria-selected="false">排列後總覽</button>
+        <button role="tab" aria-selected="false">AZ0-115F001</button>
+        <button role="tab" aria-selected="false">AZ0-115F002</button>
+        <button role="tab" aria-selected="false">AZ0-115G001</button>
+      </div>
+    </div>
+    <p class="caption">（以上為示意，實際金額依你的預算表計算。）</p>
+
+    <h3>「最佳解」與「可行方案」</h3>
+    <p>每組先讓<b>轉移筆數最少</b>，筆數相同時再讓<b>拆成多筆的科目最少</b>。</p>
+    <ul>
+      <li><b>最佳解</b>：兩項都已確定是最少。</li>
+      <li><b>可行方案</b>：在時間內還無法確定是最少（科目很多時可能發生），視窗會說明原因。</li>
+    </ul>
+    <p>兩種結果都已核對過：每個科目的流出、流入金額都等於差異，而且沒有跨組流用，可以放心使用。</p>
+
+    <h2 id="window">視窗訊息</h2>
+    <p>計算過程與結果會顯示在黑色視窗中，例如：</p>
+<pre class="console">============================================================
+  預算科目流用最佳解工具
+============================================================
+input 資料夾中找到 2 個檔案，開始計算……
+
+[1/2] 115年度第二次流用.xlsx
+  讀取 11 個科目，分為 3 組
+  ・AZ0-115F001：3 筆轉移、2 個拆分科目（最佳解）
+  ・AZ0-115G001：4 筆轉移、2 個拆分科目（最佳解）
+  ・AZ0-115F002：1 筆轉移、0 個拆分科目（最佳解）
+  <span class="ok">[成功]</span> 已輸出：115年度第二次流用_流用結果_20261119_143005.xlsx
+  原檔已移到 input\已完成
+
+[2/2] 草稿.xlsx
+  <span class="bad">[失敗]</span> 未輸出結果檔，原因如下：
+  ・第 3 列：差異應為 -7,500（流入後金額 − 原預算金額），表內為 -7,000
+  ・預算編號 AZ0-115F001-002 重複，列號：3, 4
+  原檔已移到 input\失敗
+
+============================================================
+完成：成功 1 個、失敗 1 個
+結果在 output 資料夾
+============================================================
+<span class="dim">請按任意鍵關閉視窗……</span></pre>
+    <ul>
+      <li><b>[成功]</b>：結果檔已存到 <code>output</code>。</li>
+      <li><b>[失敗]</b>：依訊息裡的列號（就是 Excel 左邊看到的列號）修正預算表。</li>
+      <li><b>[警告]</b>：通常是原檔正被 Excel 開啟而無法移動，請關閉 Excel 後手動移動。</li>
+    </ul>
+
+    <h2 id="files">處理後的檔案</h2>
+    <ul>
+      <li>計算成功的原檔會移到 <code>input\已完成</code>，不需要時可自行刪除。</li>
+      <li>有錯誤的原檔會移到 <code>input\失敗</code>；修正後放回 <code>input</code> 再執行一次。</li>
+      <li>結果檔不會覆蓋舊檔；檔名含日期時間，同一秒重複時會自動加上流水號。</li>
+    </ul>
+    <div class="callout warn">
+      <span class="ico">！</span>
+      <div>請不要刪除工具資料夾裡的 <code>src</code>、<code>.venv</code> 資料夾，否則工具無法執行（<code>.venv</code> 被刪除時，下次執行會自動重新安裝，但需要網路與幾分鐘時間）。</div>
+    </div>
+
+    <h2 id="faq">常見問題</h2>
+    <details>
+      <summary>套件安裝失敗</summary>
+      <div class="body"><p>請確認電腦有連上網路。公司網路若有阻擋，請資訊人員開放 <code>pypi.org</code> 與 <code>files.pythonhosted.org</code>。排除後重新雙擊 <span class="file">啟動流用計算.bat</span>，會自動重試。</p></div>
+    </details>
+    <details>
+      <summary>出現「差異合計不為 0」</summary>
+      <div class="body"><p>同一個流用組別裡，所有科目的差異加起來必須是 0（流出總額等於流入總額）。請依訊息中的組別與差額，檢查該組的金額。</p></div>
+    </details>
+    <details>
+      <summary>出現「公式還沒算出數字」</summary>
+      <div class="body"><p>用 Excel 打開這個檔案，按一次「儲存」，再放回 <code>input</code> 就好。</p>
+        <p>原因：本工具只看 Excel 存下來的數字，不會自己算公式。這個數字要用 Excel 存檔時才會寫進檔案；如果檔案是其他系統直接匯出的，就可能沒有。正常在 Excel 填寫、存檔的檔案不會遇到這個問題。</p></div>
+    </details>
+    <details>
+      <summary>原檔沒有被移走</summary>
+      <div class="body"><p>原檔正由 Excel 開啟時無法移動。結果檔仍會正常輸出；請關閉 Excel 後，手動把原檔移到 <code>input\已完成</code>，以免下次重複計算。</p></div>
+    </details>
+    <details>
+      <summary>如何更新到新版本</summary>
+      <div class="body"><p>下載新版 ZIP，解壓縮到新的資料夾使用即可。第一次執行會再自動準備執行環境。</p></div>
+    </details>
+  </main>
+
+</div>
+
+<script>
+document.querySelectorAll("[data-sheets]").forEach(function (box) {
+  var tabs = box.querySelectorAll(".tabbar button");
+  var panes = box.querySelectorAll(".pane");
+  tabs.forEach(function (tab, index) {
+    tab.addEventListener("click", function () {
+      tabs.forEach(function (t) { t.classList.remove("on"); t.setAttribute("aria-selected", "false"); });
+      panes.forEach(function (p) { p.classList.remove("on"); });
+      tab.classList.add("on");
+      tab.setAttribute("aria-selected", "true");
+      panes[index].classList.add("on");
+    });
+  });
+});
+</script>
+</body>
+</html>

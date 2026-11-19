@@ -1,0 +1,2 @@
+# 啟動檔以 Big5 與 CRLF 儲存，Git 不可轉換換行或編碼
+*.bat -text

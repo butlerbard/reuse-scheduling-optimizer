@@ -38,6 +38,8 @@
     gap: 48px;
   }
   @media (max-width: 920px) { .page { grid-template-columns: 1fr; } nav { display: none; } }
+  /* 所有卡片、表格、提示框寬度一致：由內容區統一限制，各區塊一律撐滿 */
+  main { width: 100%; max-width: 820px; }
 
   /* ── 側邊目錄 ── */
   nav { position: sticky; top: 28px; align-self: start; font-size: 16px; }
@@ -60,8 +62,8 @@
     padding-bottom: 6px; border-bottom: 2px solid var(--line);
   }
   h3 { font-size: 20px; font-weight: 700; color: var(--ink); margin: 22px 0 8px; }
-  p { margin-bottom: 12px; max-width: 760px; }
-  ul, ol { padding-left: 28px; max-width: 760px; margin-bottom: 12px; }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 28px; margin-bottom: 12px; }
   li { margin-bottom: 6px; }
   b, strong { color: var(--ink); }
   code {
@@ -89,7 +91,6 @@
     border-radius: 10px;
     padding: 16px 20px 14px 70px;
     margin-bottom: 12px;
-    max-width: 800px;
   }
   .steps > li::before {
     content: counter(step);
@@ -104,7 +105,7 @@
 
   /* ── 表格 ── */
   table {
-    border-collapse: collapse; width: 100%; max-width: 800px;
+    border-collapse: collapse; width: 100%;
     background: var(--card); border: 1.5px solid var(--line);
     border-radius: 10px; overflow: hidden; margin: 10px 0 14px; font-size: 17px;
   }
@@ -119,7 +120,7 @@
   /* ── 分頁示意（仿 Excel 工作表） ── */
   .sheets {
     border: 1.5px solid var(--line); border-radius: 10px;
-    background: var(--card); overflow: hidden; max-width: 800px; margin: 12px 0;
+    background: var(--card); overflow: hidden; margin: 12px 0;
   }
   .sheets .pane { display: none; padding: 4px 4px 0; }
   .sheets .pane.on { display: block; }
@@ -142,7 +143,7 @@
     background: #2E2620; color: #F3E9D8;
     font-family: var(--mono); font-size: 16px; line-height: 1.65;
     padding: 18px 20px; border-radius: 10px; overflow-x: auto;
-    max-width: 800px; margin: 10px 0 14px;
+    margin: 10px 0 14px;
   }
   pre.console .ok { color: #B9D58C; }
   pre.console .warn { color: #F2C46D; }
@@ -151,7 +152,7 @@
 
   /* ── 提示框 ── */
   .callout {
-    display: flex; gap: 12px; max-width: 800px;
+    display: flex; gap: 12px;
     border: 1.5px solid var(--line); background: var(--card-2);
     border-radius: 10px; padding: 14px 18px; margin: 16px 0;
   }
@@ -162,7 +163,7 @@
   /* ── 常見問題 ── */
   details {
     border: 1.5px solid var(--line); border-radius: 10px;
-    background: var(--card); margin: 10px 0; max-width: 800px; overflow: hidden;
+    background: var(--card); margin: 10px 0; overflow: hidden;
   }
   summary {
     list-style: none; cursor: pointer; padding: 13px 18px;

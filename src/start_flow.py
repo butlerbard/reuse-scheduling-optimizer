@@ -79,7 +79,7 @@ def prepare_environment():
     if code != 0 or run([VENV_PYTHON, "-c", IMPORT_CHECK], quiet=True) != 0:
         say("")
         say("[失敗] 必要套件安裝未完成，無法開始計算。常見原因：")
-        say("  ・電腦沒有連上網路，或公司網路阻擋下載（請資訊人員協助開放 pypi.org 與 files.pythonhosted.org）")
+        say("  ・電腦沒有連上網路，或所在的網路阻擋下載（可改用其他網路，例如手機熱點，完成第一次安裝）")
         say("  ・防毒軟體攔截安裝")
         say("排除後重新雙擊「啟動流用計算.bat」即可，會自動重試。")
         return False

@@ -46,7 +46,7 @@ def _header_indices(header: tuple[object, ...]) -> dict[str, int]:
 def _amount(value: object, field: str, line: int, formula: bool = False) -> int:
     if value is None or (isinstance(value, str) and not value.strip()):
         if formula:
-            raise InputError(f"第 {line} 列：「{field}」的公式還沒算出數字，請用 Excel 打開這個檔案、按一次儲存，再放回 input")
+            raise InputError(f"第 {line} 列：「{field}」的公式還沒算出數字，請用 Excel 打開這個檔案、按一次儲存，再執行一次")
         raise InputError(f"第 {line} 列：「{field}」不可空白")
     if isinstance(value, bool):
         raise InputError(f"第 {line} 列：「{field}」不是整數元：{value!r}")

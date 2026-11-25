@@ -14,8 +14,8 @@ venv/
 build/
 release/
 dist/
-input/
-output/
+# 使用者在工具資料夾產生的結果檔
+*_流用結果_*.xlsx
 *.egg-info/
 
 # 開發用檔案只留在本機，不上傳（「開發」資料夾有自己的本機版本紀錄）
